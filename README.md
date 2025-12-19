@@ -9,10 +9,10 @@ This tool focuses on **ease of use**, **clear output**, and **automation of comm
 No API keys, no cloud services — everything runs locally.
 
 <br>
-<p align="center">
-  <img src="Screens/GUI_1.png" width="45%" />
-  <img src="Screens/GUI_2.png" width="45%" />
-</p>
+<div align="center" style="margin-top: 20px;">
+  <img src="Screens/GUI_1.png" width="48%" />
+  <img src="Screens/GUI_2.png" width="48%" />
+</div>
 <br>
 ---
 
