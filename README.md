@@ -51,6 +51,64 @@ No API keys, no cloud services — everything runs locally.
 
 ---
 
+## Prerequisites
+
+Before using **HashCat_GUI**, ensure the following tools and dependencies are installed and correctly configured on your system.
+
+### Operating System
+- Windows 10 or Windows 11 (64-bit recommended)
+
+### Hashcat
+- Hashcat must be installed on the system.
+- The `hashcat.exe` binary must be accessible either:
+  - via the system **PATH**, or
+  - via an absolute path configured inside the application.
+
+Recommended installation directory:
+
+```bash
+C:\Tools\hashcat\
+```
+
+### John the Ripper
+
+- John the Ripper (Jumbo version) is required for cracking ZIP, RAR, and other archive-based hashes.
+- The john.exe binary must be accessible either:
+  - via the system PATH, or
+  - via an absolute path configured inside the application.
+
+Recommended installation directory:
+
+```bash
+C:\Tools\john\run\
+```
+
+### Node.js & electron
+
+- Node.js (LTS version) is required.
+- Electron is required to run the GUI.
+
+Install Electron globally:
+
+```bash
+npm install -g electron
+```
+
+Or install Electron locally inside the project directory:
+
+```bash
+npm install -g electron
+```
+
+## Environment Variables (Recommended)
+
+```makefile
+C:\Tools\hashcat
+C:\Tools\john\run
+```
+
+This allows the GUI to invoke hashcat and john without requiring hardcoded paths.
+
 ## Installation
 
 ```bash
