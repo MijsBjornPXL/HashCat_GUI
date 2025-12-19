@@ -10,10 +10,10 @@ No API keys, no cloud services — everything runs locally.
 
 <br>
 <div align="center">
-  <a href="https://github.com/MijsBjornPXL/HashCat_GUI/blob/main/Screens/GUI_1.png" target="_blank" rel="noopener noreferrer">
+  <a href="https://raw.githubusercontent.com/MijsBjornPXL/HashCat_GUI/main/Screens/GUI_1.png" target="_blank" rel="noopener noreferrer">
     <img src="Screens/GUI_1.png" width="48%" />
   </a>
-  <a href="https://github.com/MijsBjornPXL/HashCat_GUI/blob/main/Screens/GUI_2.png" target="_blank" rel="noopener noreferrer">
+  <a href="https://raw.githubusercontent.com/MijsBjornPXL/HashCat_GUI/main/Screens/GUI_2.png" target="_blank" rel="noopener noreferrer">
     <img src="Screens/GUI_2.png" width="48%" />
   </a>
 </div>
