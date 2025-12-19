@@ -18,7 +18,6 @@ No API keys, no cloud services — everything runs locally.
   </a>
 </div>
 <br>
----
 
 ## Features
 
