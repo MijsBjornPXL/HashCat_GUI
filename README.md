@@ -20,12 +20,14 @@ No API keys, no cloud services — everything runs locally.
   - `zip2john`
   - `rar2john`
   - `gpg2john`
+    
 - Supports common file types:
   - PDF
   - ZIP
   - RAR
   - Office documents (DOCX, XLSX, PPTX)
   - GPG encrypted files
+    
 - Wordlist-based cracking
 - Automatic detection of hash formats
 - Live output streaming in the GUI
