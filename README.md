@@ -22,11 +22,11 @@ No API keys, no cloud services — everything runs locally.
   - `gpg2john`
     
 - Supports common file types:
-  - PDF
-  - ZIP
-  - RAR
-  - Office documents (DOCX, XLSX, PPTX)
-  - GPG encrypted files
+  - `PDF`
+  - `ZIP`
+  - `RAR`
+  - `Office documents (DOCX, XLSX, PPTX)`
+  - `GPG encrypted files`
     
 - Wordlist-based cracking
 - Automatic detection of hash formats
