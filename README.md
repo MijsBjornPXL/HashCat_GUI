@@ -56,8 +56,10 @@ No API keys, no cloud services — everything runs locally.
 ```bash
 git clone https://github.com/MijsBjornPXL/Hashcat_GUI_M1jsXploit.git
 cd Hashcat_GUI_M1jsXploit
-npm install
-npm start
+```
+
+```powershell
+.\Hashcat_GUI_M1jsXploit.ps1
 ```
 
 ---
