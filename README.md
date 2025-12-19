@@ -1,4 +1,4 @@
-# Hashcat GUI – M1jsXploit
+# Hashcat GUI
 
 ### Graphical Hashcat & John the Ripper Interface
 
