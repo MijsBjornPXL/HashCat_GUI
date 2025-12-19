@@ -108,8 +108,8 @@ This allows the GUI to invoke hashcat and john without requiring hardcoded paths
 ## Installation
 
 ```bash
-git clone https://github.com/MijsBjornPXL/Hashcat_GUI_M1jsXploit.git
-cd Hashcat_GUI_M1jsXploit
+git clone https://github.com/MijsBjornPXL/HashCat_GUI.git
+cd HashCat_GUI
 ```
 
 ```powershell
