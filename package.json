@@ -1,0 +1,14 @@
+{
+  "name": "Hashcat_GUI_M1jsXploit",
+  "version": "1.0.0",
+  "description": "Electron GUI to build and run hashcat commands locally",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^38.7.1"
+  },
+  "author": "M1jsXploit",
+  "license": "MIT"
+}

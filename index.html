@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hashcat_GUI_M1jsXploit</title>
+<style>
+	body{
+	font-family:Inter,Arial,Helvetica,sans-serif;
+	background:#0f1720;
+	color:#e6eef6;
+	margin:0;
+	padding:18px;
+	}
+
+	/* Hoofdcontainer: houdt alles gecentreerd */
+	.wrap{
+	max-width:1100px;
+	margin:0 auto;
+	}
+
+	/* Card zelf wat smaller + padding */
+	.card{
+	background:#0b1220;
+	padding:16px;
+	border-radius:10px;
+	box-shadow:0 6px 24px rgba(0,0,0,0.6);
+	}
+
+	/* Alle inputs binnen de card mogen nooit breder dan de card worden */
+	textarea,input,select,button{
+	font-family:monospace;
+	color:#e6eef6;
+	background:#071025;
+	border:1px solid rgba(255,255,255,0.03);
+	padding:8px;
+	border-radius:6px;
+	max-width:100%;
+	box-sizing:border-box;
+	}
+
+	/* Hash-veld netjes binnen de card + lange hashes wrappen */
+	textarea{
+	min-height:40px;
+	width:100%;
+	overflow-wrap:anywhere; /* breek ook lange strings zonder spaties */
+	resize:vertical;
+	}
+
+	/* Layout helpers */
+	.row{
+	display:flex;
+	gap:10px;
+	}
+
+	/* Live output netjes binnen de card houden */
+	pre{
+	background:#041021;
+	padding:12px;
+	border-radius:8px;
+	max-height:350px;
+	overflow:auto;
+	white-space:pre-wrap;
+	overflow-wrap:anywhere; /* lange hashes wrappen in de pre */
+	box-sizing:border-box;
+	}
+
+	/* Buttons */
+	.btn{
+	  background:#2563eb;
+	  border:0;
+      padding:8px 12px;
+      border-radius:6px;
+      color:#fff;
+      cursor:pointer;
+	}
+	.btn.danger{
+	  background:#dc2626;
+	}
+
+	/* Labels & kleine tekst */
+	.small{
+	  font-size:12px;
+	  color:#9aa4ad;
+	}
+	label{
+	  font-size:13px;
+	  color:#9aa4ad;
+	  display:block;
+	  margin-bottom:6px;
+	}
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2>Hashcat_GUI_M1jsXploit</h2>
+      <div class="small">Electron app — runs Hashcat locally and streams output. Alleen gebruiken op vertrouwde machines.</div>
+      <hr style="margin:12px 0"/>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:14px">
+        <div>
+          <label>Hash (plak hier)</label>
+          <textarea id="hashInput" placeholder="$1$... of d033e22ae..."></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="width:260px">
+            <label>Mode (auto of kies)</label>
+            <select id="modeSelect"><option value="auto">Auto detect</option></select>
+          </div>
+
+          <div style="width:160px">
+            <label>Aanval</label>
+            <select id="attackSelect">
+              <option value="dict">Dictionary</option>
+              <option value="mask">Mask</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </div>
+
+          <div style="flex:1">
+            <label>Woordlijst (pad op systeem)</label>
+            <input id="wordlist" value="/c/Tools/Hashcat/Dictionaries/rockyou.txt"/>
+          </div>
+        </div>
+
+        <div id="maskBlock" style="display:none">
+          <label>Mask (bv Brute?a?a?a of ?d?d?d?d)</label>
+          <input id="maskInput" value="Brute?a?a?a" style="width:100%"/>
+          <div style="margin-top:6px">
+            <label>Custom charset (voor ?1)</label>
+            <input id="csInput" value="?l?u?d?s" style="width:100%"/>
+          </div>
+        </div>
+
+		<div style="display:flex;gap:8px">
+			<button id="runBtn" class="btn">Run</button>
+			<button id="stopBtn" class="btn danger" disabled>Stop</button>
+			<button id="johnBtn" class="btn">Open file (John)</button>
+			<button id="downloadBtn" class="btn">Download script</button>
+			<button id="showBtn" class="btn">Show (--show)</button>
+			<button id="clearBtn" class="btn">Clear output</button>
+		</div>
+
+        <div>
+          <label>Live output</label>
+          <pre id="output">Idle</pre>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;color:#9aa4ad;font-size:13px">
+        <small>Note: de app schrijft een tijdelijk script naar /tmp en voert dit uit. Gebruik alleen op vertrouwde machines.</small>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* renderer script - uses window.electronAPI exposed by preload.js */
+const modes = {
+  "0":"MD5","100":"SHA-1","1400":"SHA-256","1700":"SHA-512",
+  "500":"MD5crypt ($1$)","3200":"bcrypt","7400":"sha256crypt ($5$)","1800":"sha512crypt ($6$)",
+  "2500":"WPA/WPA2","22000":"WPA hc22000","1000":"NTLM","3000":"MySQL"
+};
+const friendly = ["0","100","1400","1700","500","3200","7400","1800","2500","22000","1000"];
+
+const modeSelect = document.getElementById('modeSelect');
+friendly.forEach(k=> modeSelect.add(new Option(`${modes[k]} (${k})`, k)));
+Object.keys(modes).forEach(k=> { if(!friendly.includes(k)) modeSelect.add(new Option(`${modes[k]} (${k})`, k)); });
+
+const hashInput = document.getElementById('hashInput');
+const attackSelect = document.getElementById('attackSelect');
+const wordlist = document.getElementById('wordlist');
+const maskBlock = document.getElementById('maskBlock');
+const maskInput = document.getElementById('maskInput');
+const csInput = document.getElementById('csInput');
+const output = document.getElementById('output');
+const runBtn = document.getElementById('runBtn');
+const stopBtn = document.getElementById('stopBtn');
+const johnBtn = document.getElementById('johnBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const showBtn = document.getElementById('showBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+function detectModeFromHash(h){
+  h = (h||'').trim();
+  if(!h) return null;
+  if(/^\$[0-9]+\$/.test(h) || /^\$[26y]\$/.test(h)){
+    if(/^\$1\$/.test(h)) return '500';
+    if(/^\$2[aby]\$/.test(h)) return '3200';
+    if(/^\$5\$/.test(h)) return '7400';
+    if(/^\$6\$/.test(h)) return '1800';
+  }
+  const len = h.replace(/\s+/g,'').length;
+  if(len===32) return '0';
+  if(len===40) return '100';
+  if(len===64) return '1400';
+  if(len===128) return '1700';
+  if(len===96) return '10800';
+  return null;
+}
+
+attackSelect.addEventListener('change', ()=> {
+  maskBlock.style.display = (attackSelect.value === 'mask' || attackSelect.value === 'hybrid') ? 'block' : 'none';
+});
+
+hashInput.addEventListener('input', ()=> {
+  if(modeSelect.value === 'auto'){
+    const a = detectModeFromHash(hashInput.value);
+    if(a) modeSelect.value = a;
+  }
+});
+
+function buildScript() {
+  const h = hashInput.value.trim();
+  if (!h) {
+    output.textContent = "# plak een hash om te starten";
+    return null;
+  }
+
+  let mode = modeSelect.value;
+  if (mode === "auto") {
+    const a = detectModeFromHash(h);
+    mode = a || "0";
+  }
+
+  const hashFile = "/tmp/hash.txt";
+  const safe = h.replace(/'/g, "'\\''");
+  const put = `printf '%s' '${safe}' > ${hashFile}`;
+
+  const attack = attackSelect.value;
+
+  const isWindows = navigator.userAgent.includes("Windows");
+  const hashcatCmd = isWindows
+    ? "/c/Tools/Hashcat/hashcat.exe"
+    : "hashcat";
+
+  let cmd = "";
+
+  if (attack === "dict") {
+    cmd = `${hashcatCmd} -m ${mode} -a 0 ${hashFile} ${wordlist.value} --status --status-timer=5`;
+  } 
+  else if (attack === "mask") {
+    const mask = (maskInput.value || "?a?a?a").trim();
+    const cs = csInput.value.trim();
+
+    if (cs && cs !== "?l?u?d?s") {
+      cmd = `${hashcatCmd} -m ${mode} -a 3 ${hashFile} -1 '${cs}' '${mask}' --status --status-timer=5`;
+    } else {
+      cmd = `${hashcatCmd} -m ${mode} -a 3 ${hashFile} '${mask}' --status --status-timer=5`;
+    }
+  } 
+  else if (attack === "hybrid") {
+    const mask = (maskInput.value || "?d?d").trim();
+    cmd = `${hashcatCmd} -m ${mode} -a 6 ${hashFile} ${wordlist.value} '${mask}' --status --status-timer=5`;
+  }
+
+  const script = `#!/bin/bash
+
+${put}
+
+echo "[*] Hash written to /tmp/hash.txt"
+
+${cmd}
+`;
+
+  return { script, mode };
+}
+
+
+downloadBtn.addEventListener('click', ()=> {
+  const r = buildScript();
+  if(!r) return alert('Geen script');
+  const blob = new Blob([r.script], { type:'text/x-shellscript' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'crackhash.sh'; a.click(); URL.revokeObjectURL(a.href);
+});
+
+let currentJobId = null;
+
+runBtn.addEventListener('click', async ()=> {
+  const r = buildScript();
+  if(!r) return alert('Geen script');
+  if(!confirm('Dit zal het script lokaal uitvoeren op deze machine. Zorg dat je toestemming hebt. Verder?')) return;
+  output.textContent = 'Starting...\n';
+  try {
+    const res = await window.electronAPI.runScript(r.script);
+    if(res.error){ output.textContent += 'Error: '+res.error; return; }
+    currentJobId = res.id;
+    stopBtn.disabled = false;
+    output.textContent += `Started job id=${res.id}\n`;
+  } catch(e) { output.textContent += 'Exception: '+String(e)+'\n' }
+});
+
+// receive streams
+window.electronAPI.onOutput((msg) => {
+  if(!msg) return;
+  if(currentJobId && msg.id && msg.id !== currentJobId) return;
+  output.textContent += msg.data;
+  output.scrollTop = output.scrollHeight;
+  if(msg.stream === 'meta' && /PROCESS_EXIT/.test(msg.data)) {
+    // if job finished, auto-run show and append output
+    stopBtn.disabled = true;
+  }
+});
+
+stopBtn.addEventListener('click', async ()=> {
+  if(!currentJobId) { output.textContent += 'Geen job running\n'; return; }
+  try {
+    const r = await window.electronAPI.stopScript(currentJobId);
+    if(r && r.error) output.textContent += 'Stop error: '+r.error+'\n';
+    else output.textContent += 'Stop request sent\n';
+    stopBtn.disabled = true;
+  } catch(e){ output.textContent += 'Stop exception: '+String(e)+'\n' }
+});
+
+showBtn.addEventListener('click', async ()=> {
+  const r = buildScript();
+  if(!r) return alert('Geen script');
+  output.textContent += '\nRunning hashcat --show...\n';
+  try {
+    const res = await window.electronAPI.hashcatShow(r.mode || '0');
+    if(res.error) output.textContent += 'Error: '+res.error+'\n';
+    else output.textContent += (res.stdout || res.stderr || 'No output') + '\n';
+  } catch (e) { output.textContent += 'Exception: '+String(e)+'\n' }
+});
+
+// John: file kiezen (pdf/docx/xlsx/pptx/zip/rar/gpg) en hash extraheren + john runnen
+johnBtn.addEventListener('click', async () => {
+  output.textContent += '\n[John] Selecteer een bestand...\n';
+
+  try {
+    const res = await window.electronAPI.pickAndExtract();
+    if (!res || res.canceled) {
+      output.textContent += '[John] Geannuleerd.\n';
+      output.scrollTop = output.scrollHeight;
+      return;
+    }
+
+    if (res.cmd) {
+      output.textContent += `[John] Command: ${res.cmd}\n`;
+    }
+
+    const raw = res.hash;          // bv:  C:\path\file.pdf:$pdf$...
+    if (!raw) {
+      output.textContent += '[John] Geen geldige hash gevonden.\n';
+      output.scrollTop = output.scrollHeight;
+      return;
+    }
+
+    // 🔥 1) Volledige lijn naar John (inclusief bestandsnaam)
+    const hashLineForJohn = raw;
+
+    // 🔥 2) Alleen deel na laatste ":" tonen in de GUI
+    let displayHash = raw;
+    const idx = raw.lastIndexOf(':');
+    if (idx !== -1) {
+      displayHash = raw.slice(idx + 1).trim();
+    }
+
+    output.textContent += `[John] Hash geëxtraheerd:\n`;
+    output.textContent += '----------------------------------\n\n';
+    output.textContent += displayHash + '\n\n';   // <-- hier displayHash, NIET raw
+    output.textContent += '----------------------------------\n';
+
+    // GUI-hashveld vullen met enkel de hash
+    hashInput.value = displayHash;
+    hashInput.dispatchEvent(new Event('input'));
+
+    // John laten cracken met de volledige lijn
+    output.textContent += '\n[John] Crack gestart...\n';
+
+    const crackRes = await window.electronAPI.johnCrack(
+      hashLineForJohn,
+      res.mode || null,
+      wordlist.value.trim()
+    );
+
+    if (crackRes.error) {
+      output.textContent += '[John] Crack error: ' + crackRes.error + '\n';
+    } else {
+      if (crackRes.stdout) output.textContent += crackRes.stdout + '\n';
+      if (crackRes.stderr) output.textContent += crackRes.stderr + '\n';
+
+      if (crackRes.password) {
+        output.textContent += '\n[John] Password:\n';
+        output.textContent += '----------------------------------\n\n';
+        output.textContent += crackRes.password + '\n\n';
+        output.textContent += '----------------------------------\n\n';
+        output.textContent += 'Have a nice day! - M1jsXploit\n';
+        output.textContent += '\n==================================\n\n';
+      } else {
+        output.textContent += '\n[John] Geen plaintext wachtwoord gevonden.\n';
+      }
+    }
+
+  } catch (e) {
+    output.textContent += '[John] Exception: ' + String(e) + '\n';
+  }
+
+  output.scrollTop = output.scrollHeight;
+});
+
+
+clearBtn.addEventListener('click', ()=> { output.textContent = ''; });
+
+</script>
+</body>
+</html>
