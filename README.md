@@ -10,8 +10,8 @@ No API keys, no cloud services — everything runs locally.
 
 <br>
 <p align="center">
-  <img src="Screens/GUI_1.png" width="50%" />
-  <img src="Screens/GUI_2.png" width="50%" />
+  <img src="Screens/GUI_1.png" width="45%" />
+  <img src="Screens/GUI_2.png" width="45%" />
 </p>
 <br>
 ---
