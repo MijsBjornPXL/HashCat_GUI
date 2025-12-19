@@ -96,12 +96,6 @@ Install Electron globally:
 npm install -g electron
 ```
 
-Or install Electron locally inside the project directory:
-
-```bash
-npm install -g electron
-```
-
 ## Environment Variables (Recommended)
 
 ```makefile
